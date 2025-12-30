@@ -104,7 +104,6 @@ class TeamClassifier:
         
         logger.info(f"Extracting features for fitting ({len(crops)} samples)...")
         data = self.extract_features(crops)
-        # data = normalize(data, norm='l2')
         
         logger.info("Running UMAP reduction...")
         projections = self.reducer.fit_transform(data)
@@ -126,7 +125,6 @@ class TeamClassifier:
             return np.array([])
 
         data = self.extract_features(crops)
-        # data = normalize(data, norm='l2')
         projections = self.reducer.transform(data)
 
         return self.cluster_model.predict(projections)
