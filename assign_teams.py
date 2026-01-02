@@ -7,31 +7,32 @@ import cv2
 from tqdm import tqdm
 from loguru import logger
 from typing import List
-from team_classifier import TeamClassifier
+from team_classifier_clipreid import TeamClassifier
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 128
+SHRINK_SCALE = 1.0
 
-def shrink_boxes(xyxy: np.ndarray, scale: float) -> np.ndarray:
-    """
-    Shrinks bounding boxes by a given scale factor while keeping their centers fixed.
-    This helps in focusing on the jersey color by removing background noise.
+# def shrink_boxes(xyxy: np.ndarray, scale: float) -> np.ndarray:
+#     """
+#     Shrinks bounding boxes by a given scale factor while keeping their centers fixed.
+#     This helps in focusing on the jersey color by removing background noise.
 
-    Args:
-        xyxy (np.ndarray): Array of shape (N, 4) in [x1, y1, x2, y2] format.
-        scale (float): Scale factor (e.g., 0.4).
+#     Args:
+#         xyxy (np.ndarray): Array of shape (N, 4) in [x1, y1, x2, y2] format.
+#         scale (float): Scale factor (e.g., 0.4).
 
-    Returns:
-        np.ndarray: Resized bounding boxes.
-    """
-    x1, y1, x2, y2 = xyxy[:, 0], xyxy[:, 1], xyxy[:, 2], xyxy[:, 3]
-    cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
-    w, h = (x2 - x1) * scale, (y2 - y1) * scale
+#     Returns:
+#         np.ndarray: Resized bounding boxes.
+#     """
+#     x1, y1, x2, y2 = xyxy[:, 0], xyxy[:, 1], xyxy[:, 2], xyxy[:, 3]
+#     cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+#     w, h = (x2 - x1) * scale, (y2 - y1) * scale
 
-    new_x1, new_y1 = cx - w / 2, cy - h / 2
-    new_x2, new_y2 = cx + w / 2, cy + h / 2
+#     new_x1, new_y1 = cx - w / 2, cy - h / 2
+#     new_x2, new_y2 = cx + w / 2, cy + h / 2
 
-    return np.stack([new_x1, new_y1, new_x2, new_y2], axis=1)
+#     return np.stack([new_x1, new_y1, new_x2, new_y2], axis=1)
 
 def get_crops_from_frame(img: np.ndarray, detections: np.ndarray, shrink_scale: float = 0.4) -> List[np.ndarray]:
     """
@@ -49,19 +50,16 @@ def get_crops_from_frame(img: np.ndarray, detections: np.ndarray, shrink_scale: 
     xyxy[:, 2] += xyxy[:, 0]
     xyxy[:, 3] += xyxy[:, 1]
 
-    shrunk_xyxy = shrink_boxes(xyxy, scale=shrink_scale)
+    # shrunk_xyxy = shrink_boxes(xyxy, scale=shrink_scale)
     
     crops = []
     h_img, w_img = img.shape[:2]
     
-    for box in shrunk_xyxy:
+    for box in xyxy:
         x1, y1, x2, y2 = box.astype(int)
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w_img, x2), min(h_img, y2)
-        if x1 >= x2 or y1 >= y2:
-            crops.append(np.zeros((10, 10, 3), dtype=np.uint8)) 
-        else:
-            crops.append(img[y1:y2, x1:x2])
+        crops.append(img[y1:y2, x1:x2])
             
     return crops
 
@@ -115,7 +113,7 @@ def main(data_path, pred_dir, output_dir):
                     continue
 
                 frame_dets = track_res[track_res[:, 0] == frame_id]
-                crops = get_crops_from_frame(img, frame_dets, shrink_scale=0.4)
+                crops = get_crops_from_frame(img, frame_dets, shrink_scale=SHRINK_SCALE)
                 training_crops.extend(crops)
 
         logger.info(f"Fitting TeamClassifier with {len(training_crops)} samples...")
@@ -146,7 +144,7 @@ def main(data_path, pred_dir, output_dir):
                 continue
 
             # 1. Get Crops
-            crops = get_crops_from_frame(img, frame_dets, shrink_scale=0.4)
+            crops = get_crops_from_frame(img, frame_dets, shrink_scale=SHRINK_SCALE)
             
             # 2. Predict Team ID (0 or 1)
             team_ids = team_classifier.predict(crops)
