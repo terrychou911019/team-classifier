@@ -6,13 +6,13 @@ from typing import Generator, Iterable, List, TypeVar
 from sklearn.cluster import KMeans
 from loguru import logger
 import torchvision.transforms as T
-from clipreid import model
+from transreid import model
 
 V = TypeVar("V")
 
-class ClIPReIDExtractor:
+class TRANSREIDExtractor:
     """
-    Feature extractor with CLIP-ReID model.
+    Feature extractor with TRANSREID model.
     """
     def __init__(self, model, device='cuda'):
         self.model = model.eval().to(device)
@@ -62,12 +62,12 @@ class TeamClassifier:
         self.device = device
         self.batch_size = batch_size
         
-        logger.info(f"Loading CLIP-ReID model on {self.device}...")
+        logger.info(f"Loading TRANSREID model on {self.device}...")
         
-        self.features_model = ClIPReIDExtractor(model=model, device=device)
+        self.features_model = TRANSREIDExtractor(model=model, device=device)
 
         self.preprocess = T.Compose([
-            T.Resize((256, 128)),
+            T.Resize((336, 160)),
             T.ToTensor(),
             # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),

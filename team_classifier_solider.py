@@ -6,13 +6,13 @@ from typing import Generator, Iterable, List, TypeVar
 from sklearn.cluster import KMeans
 from loguru import logger
 import torchvision.transforms as T
-from clipreid import model
+from solider import model
 
 V = TypeVar("V")
 
-class ClIPReIDExtractor:
+class SOLIDERExtractor:
     """
-    Feature extractor with CLIP-ReID model.
+    Feature extractor with SOLIDER model.
     """
     def __init__(self, model, device='cuda'):
         self.model = model.eval().to(device)
@@ -22,7 +22,7 @@ class ClIPReIDExtractor:
     def __call__(self, batch_tensor):
         batch_tensor = batch_tensor.to(self.device, non_blocking=True)
         feats = self.model(batch_tensor) 
-        return feats
+        return feats[0]
 
 def create_batches(sequence: Iterable[V], batch_size: int) -> Generator[List[V], None, None]:
     """
@@ -62,9 +62,9 @@ class TeamClassifier:
         self.device = device
         self.batch_size = batch_size
         
-        logger.info(f"Loading CLIP-ReID model on {self.device}...")
+        logger.info(f"Loading SOLIDER model on {self.device}...")
         
-        self.features_model = ClIPReIDExtractor(model=model, device=device)
+        self.features_model = SOLIDERExtractor(model=model, device=device)
 
         self.preprocess = T.Compose([
             T.Resize((256, 128)),

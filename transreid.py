@@ -2,15 +2,18 @@ import os
 import sys
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_CLIP_REID_DIR = os.path.join(_THIS_DIR, 'CLIP-ReID')
-if _CLIP_REID_DIR not in sys.path:
-    sys.path.insert(0, _CLIP_REID_DIR)
+_TRANSREID_DIR = os.path.join(_THIS_DIR, 'TransReID')
+if _TRANSREID_DIR not in sys.path:
+    sys.path.insert(0, _TRANSREID_DIR)
 
 from config import cfg
-from model.make_model_clipreid import make_model
+from model import make_model
 from utils.logger import setup_logger
 
-cfg_path = os.path.join(_CLIP_REID_DIR, 'configs', 'vit_clipreid.yml')
+# cfg_path = os.path.join(_TRANSREID_DIR, 'configs', 'market.yml')
+# cfg_path = os.path.join(_TRANSREID_DIR, 'configs', 'msmt.yml')
+# cfg_path = os.path.join(_TRANSREID_DIR, 'configs', 'duke.yml')
+cfg_path = os.path.join(_TRANSREID_DIR, 'configs', 'occ_duke.yml')
 cfg.merge_from_file(cfg_path)
 cfg.freeze()
 

@@ -2,15 +2,16 @@ import os
 import sys
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_CLIP_REID_DIR = os.path.join(_THIS_DIR, 'CLIP-ReID')
-if _CLIP_REID_DIR not in sys.path:
-    sys.path.insert(0, _CLIP_REID_DIR)
+_SOLIDER_DIR = os.path.join(_THIS_DIR, 'SOLIDER-REID')
+if _SOLIDER_DIR not in sys.path:
+    sys.path.insert(0, _SOLIDER_DIR)
 
 from config import cfg
-from model.make_model_clipreid import make_model
+from model import make_model
 from utils.logger import setup_logger
 
-cfg_path = os.path.join(_CLIP_REID_DIR, 'configs', 'vit_clipreid.yml')
+# cfg_path = os.path.join(_SOLIDER_DIR, 'configs', 'swin_base_market.yml')
+cfg_path = os.path.join(_SOLIDER_DIR, 'configs', 'swin_base_msmt17.yml')
 cfg.merge_from_file(cfg_path)
 cfg.freeze()
 
@@ -25,5 +26,5 @@ logger.info("Running with config:\n{}".format(cfg))
 
 num_classes, camera_num, view_num = 1, 1, 1 
 
-model = make_model(cfg, num_class=num_classes, camera_num=camera_num, view_num=view_num)
+model = make_model(cfg, num_class=num_classes, camera_num=camera_num, view_num=view_num, semantic_weight=cfg.MODEL.SEMANTIC_WEIGHT)
 model.load_param(cfg.TEST.WEIGHT)
